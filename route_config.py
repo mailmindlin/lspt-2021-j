@@ -9,8 +9,10 @@ app = Flask(__name__)
 @app.route('/search', methods = ['GET'])
 def search():
     user_query = handle_user_query()
+    first_result = user_query.offset
+    last_result = user_query.page_size-first_result
     processed_query = process_query(user_query)
-    ranking_result = request_to_rank(processed_query)
+    ranking_result = request_to_rank(1, processed_query, False, first_result, last_result)
     document_ids = handle_ranking_result(ranking_result)
     dds_result = request_to_dds(document_ids)
     documents = handle_dds_result(dds_result)
