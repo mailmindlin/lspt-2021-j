@@ -1,4 +1,6 @@
-from uiux import UserQuery
+import dataclasses
+from ..model.search import SearchQuery
+import re
 
 # ProcessedQuery contains information about processed query
 class ProcessedQuery:
@@ -9,7 +11,9 @@ class ProcessedQuery:
         self.exclude = _exclude
 
 
-# process_query return the processed query after processing given the unprocssed query as input
-def process_query(user_query):
+def process_query(user_query: SearchQuery) -> SearchQuery:
+    """
+    Expand synonyms
+    """
     # TODO: do some processing
-    pass
+    return user_query

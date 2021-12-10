@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Awaitable, List
 from flask import json, jsonify
 import requests
 
@@ -12,6 +14,17 @@ class DocumentInfo:
         self.url = _url
         self.title = _title
         self.last_updated = _last_updated
+
+
+class DDSApi:
+    instance: DDSApi
+    
+    def __init__(self) -> None:
+        pass
+    
+    async def get_document_info(self, document_ids: List[str]) -> Awaitable[List[DocumentInfo]]:
+        raise NotImplemented
+    
 
 # Map keys to classes
 mapping = {frozenset(('id',
