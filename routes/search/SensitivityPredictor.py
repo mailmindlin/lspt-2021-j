@@ -9,6 +9,8 @@ class SensitivityPredictorBase:
 		return False
 
 
+SensitivityPredictor: SensitivityPredictorBase
+
 try:
 	import tensorflow as tf
 	class RNNPredictor(SensitivityPredictorBase):
