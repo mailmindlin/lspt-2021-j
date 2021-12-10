@@ -17,6 +17,8 @@ async def search():
 	user_query = read_query()
 	warnings = list()
 	
+	query_id = uuid.uuid4()
+	
 	# Parse "include", -exclude, and site:filter.com\
 	try:
 		user_query = parse_query(user_query)
@@ -48,9 +50,9 @@ async def search():
 	
 	# Build response
 	response = SearchResponse(
-		query_id="sdf",
 		format = user_query.accept,
 		sensitive=True,
 		warnings=warnings
+		query_id = str(query_id),
 	)
 	return response.to_response()
