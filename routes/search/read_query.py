@@ -11,9 +11,7 @@ def read_query():
     """
     Parses a UserQuery from the HTTP request fields
     """
-    query = request.args.get("q")
-    if query is None:
-        raise BadRequest("No query provided")
+    query = request.args.get("q", default="")
     
     q_site = request.args.get("q_site")
     
@@ -32,6 +30,10 @@ def read_query():
         dnt = True
     if request.headers.get("Sec-GPC") == "1":
         dnt = True
+    
+    include = request.args.getlist("q_include")
+    if (query.strip() == "" and len(include) < 1):
+        raise BadRequest("Empty query")
     
     return SearchQuery(
         query=query,
