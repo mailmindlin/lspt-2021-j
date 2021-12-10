@@ -1,7 +1,8 @@
 import re
 from typing import List, Tuple
 import dataclasses
-from ..model.search import SearchQuery
+from .query import SearchQuery
+
 
 def find_and_replace(pattern: re.Pattern, text: str, replace: str) -> Tuple[str, List[re.Match]]:
 	"""Replace all instances of pattern, returning a list of the matches"""
@@ -17,7 +18,7 @@ def find_and_replace(pattern: re.Pattern, text: str, replace: str) -> Tuple[str,
 	return (text, matches)
 
 def named_group(name: str, value: str):
-	return f"(?<{name}>{value})"
+	return f"(?P<{name}>{value})"
 	
 def parse_query(raw: SearchQuery) -> SearchQuery:
 	"""Parse query text to pull out additional fields"""
@@ -29,7 +30,7 @@ def parse_query(raw: SearchQuery) -> SearchQuery:
 	
 	
 	# Word-break look[ahead/behind] (we only want to start/end at beginning/end of string or whitespace)
-	lb_word_break = "(^|(<=\\s))"
+	lb_word_break = "(^|(?<=\\s))"
 	la_word_break = "($|(?=\\s))"
 	
 	# Find "quote includes"
@@ -42,10 +43,10 @@ def parse_query(raw: SearchQuery) -> SearchQuery:
 	# Find hyphen -excludes
 	#TODO: we can probably merge this with the quote_include regex
 	simple_exclude_body = "[^-\\s][^\\s]*?" # Can't start with quotes
-	hyphen_exclude = re.compile(f"{la_word_break}-((\"{named_group('exclude', quote_include_body)}\")|{named_group('exclude', simple_exclude_body)}){lb_word_break}")
+	hyphen_exclude = re.compile(f"{la_word_break}-((\"{named_group('exclude', quote_include_body)}\")|{named_group('exclude1', simple_exclude_body)}){lb_word_break}")
 	query, exclude_matches = find_and_replace(hyphen_exclude, query, "")
 	for match in exclude_matches:
-		exclude.append(match.group('exclude'))
+		exclude.append(match.group('exclude') or match.group('exclude1'))
 	
 	# Find site:filter
 	valid_hostname = "^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*$"

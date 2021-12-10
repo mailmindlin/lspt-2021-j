@@ -1,9 +1,9 @@
 from __future__ import annotations
-from typing import Literal
+from typing import Any, Literal, List, Dict
 import json
 import requests
-from process_query import ProcessedQuery
 from dataclasses import dataclass
+from .client import RESTfulClient
 
 
 @dataclass
@@ -14,7 +14,7 @@ class RankRequest:
     last_result: int
     api_version: Literal[1] = 1
     
-    def toJSON(self):
+    def to_json(self):
         return {
             'api_version': self.api_version,
             'query': self.query,
@@ -23,61 +23,70 @@ class RankRequest:
             'last_result': self.last_result,
         }
 
+@dataclass
 class RankResult:
-    def __init__(self, _error, _page, _ranking_speed, _documents) -> None:
-        self.error = _error
-        self.page = _page
-        self.ranking_speed = _ranking_speed
-        self.documents = _documents
+    page: int
+    ranking_speed: int
+    documents: List[DocumentInfo]
 
 @dataclass
 class DocumentInfo:
+    @staticmethod
+    def parse(raw: Dict[str, str]):
+        return DocumentInfo(
+            id = raw['id'],
+            url = raw['url'],
+            title = raw['title'],
+        )
+    
     id: str
     url: str
     title: str
 
 
-class RankingApi:
-    instance: RankingApi
+class RankingClient(RESTfulClient):
+    instance: RankingClient
     
     def __init__(self, url: str):
         self.url = url
     
-    async def _rank_send_request(self, request: str) -> requests.Response:
-        raise NotImplemented
+    async def _rank_send_request(self, request: RankRequest):
+        # send POST request to ranking server
+        return requests.post(
+            url = self.url,
+            json=json.dumps(request.to_json()),
+            headers={
+                'Accept': 'application/json',
+            }
+        )
+    def _rank_parse_response(self, response: Dict[str, Any]) -> RankResult:
+        if 'error' in response:
+            raise RuntimeError(f"Ranking: {response['error']}")
+        
+        documents = [DocumentInfo.parse(document) for document in response.get(response, [])]
+        
+        return RankResult(
+            page=response['page'],
+            ranking_speed=response['ranking_speed'],
+            documents=documents
+        )
+            
     
     async def rank(self, request: RankRequest) -> RankResult:
         """
         request_to_rank sends POST request to Ranking with a formatted json file and return ranking result from remote server
         """
-        json_request = json.dumps(request.toJSON())
         # send POST request to ranking server
-        resp = requests.post(url=self.url, json=json_request)
+        resp = await self._rank_send_request(request)
+        
         if resp.status_code != 200:
             raise RuntimeError(f"Unable to load data from ranking: {resp.status_code}")
         
         # return ranking result
-        
-        ranking_result = json.loads(resp, object_hook = class_mapper)
-        return ranking_result
+        return self._rank_parse_response(resp.json())
 
 
-RankingApi.instance = RankingApi('')
-
-# Map keys to classes
-mapping = {frozenset(('id',
-                                        'url',
-                                        'title',
-                                        'snippet',
-                                        'last_crawled')): DocumentInfo,
-                    frozenset(('error',
-                                        'page',
-                                        'ranking_speed',
-                                        'documents')): RankResult}
-
-# helper function to extract variable from nested json into different classes
-def class_mapper(d):
-    return mapping[frozenset(d.keys())](**d)
+RankingClient.instance = RankingClient('')
 
 # handle_ranking_result handle the response from ranking team and extract necessary information from response
 def handle_ranking_result(ranking_result):
@@ -91,15 +100,6 @@ def handle_ranking_result(ranking_result):
         for k in len(ranking_result.documents):
             documents_id.append(ranking_result.documents[k].id)
         return documents_id
-
-def rank_query(query: ProcessedQuery):
-    first_result = query.offset
-    last_result = query.page_size-first_result
-    
-    request = RankRequest(
-        
-    )
-    
     
 # 
 def request_to_rank(api_version: int, query: str, sensitive: bool, first_result: int, last_result: int):

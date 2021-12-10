@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Awaitable, List
-from flask import json, jsonify
 import requests
+from .client import RESTfulClient
 
 class DocumentResults:
     def __init__(self, _error, _documents) -> None:
@@ -16,8 +16,8 @@ class DocumentInfo:
         self.last_updated = _last_updated
 
 
-class DDSApi:
-    instance: DDSApi
+class DDSClient(RESTfulClient):
+    instance: DDSClient
     
     def __init__(self) -> None:
         pass

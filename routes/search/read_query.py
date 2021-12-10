@@ -2,7 +2,8 @@ from flask import request
 
 from werkzeug.exceptions import BadRequest
 
-from ..model.search import SearchQuery
+from .query import SearchQuery
+
 DEFAULT_PAGE_SIZE = 20
 
 

@@ -1,6 +1,4 @@
-import dataclasses
-from ..model.search import SearchQuery
-import re
+from .query import SearchQuery
 
 # ProcessedQuery contains information about processed query
 class ProcessedQuery:
