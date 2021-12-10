@@ -4,7 +4,7 @@ from mock import inject_mocks
 from routes import blueprint
 from argparse import ArgumentParser
 
-app = Flask( __name__)
+app = Flask(__name__.split('.')[0])
 app.register_blueprint(blueprint)
 
 parser = ArgumentParser()
